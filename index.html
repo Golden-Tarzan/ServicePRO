@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ProService AB – Boka Tjänster</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d0f0d;
+    --surface: #141a14;
+    --surface2: #1c241c;
+    --border: #2a3a2a;
+    --green: #4caf50;
+    --green-bright: #6fcf70;
+    --amber: #e6a817;
+    --text: #e8ede8;
+    --muted: #7a9080;
+    --card-hover: #1e2a1e;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    overflow-x: hidden;
+    cursor: default;
+  }
+
+  /* ---- NOISE OVERLAY ---- */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.6;
+  }
+
+  /* ---- HERO ---- */
+  .hero {
+    min-height: 100vh;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    position: relative;
+    overflow: hidden;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 70% 40%, rgba(76,175,80,0.07) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 50% at 20% 80%, rgba(230,168,23,0.05) 0%, transparent 50%);
+  }
+
+  .hero-lines {
+    position: absolute;
+    inset: 0;
+    background-image:
+      repeating-linear-gradient(90deg, transparent, transparent 79px, rgba(255,255,255,0.018) 80px);
+    pointer-events: none;
+  }
+
+  /* ---- NAV ---- */
+  nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2rem 4rem;
+    position: relative;
+    z-index: 10;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.8rem;
+    letter-spacing: 0.12em;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  .logo-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--green);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.7); }
+  }
+
+  .nav-cta {
+    background: var(--green);
+    color: #0d0f0d;
+    border: none;
+    padding: 0.7rem 1.8rem;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s;
+    clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%);
+  }
+
+  .nav-cta:hover { background: var(--green-bright); transform: translateY(-1px); }
+
+  /* ---- HERO CONTENT ---- */
+  .hero-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 4rem 4rem 2rem;
+    position: relative;
+    z-index: 10;
+  }
+
+  .hero-eyebrow {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.75rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--green);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .hero-eyebrow::before {
+    content: '';
+    display: block;
+    width: 40px;
+    height: 1px;
+    background: var(--green);
+  }
+
+  h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(5rem, 13vw, 11rem);
+    line-height: 0.92;
+    letter-spacing: 0.02em;
+    color: var(--text);
+    mix-blend-mode: normal;
+  }
+
+  h1 .accent { color: var(--green); }
+
+  .hero-sub {
+    margin-top: 2.5rem;
+    max-width: 440px;
+    font-size: 1.05rem;
+    line-height: 1.7;
+    color: var(--muted);
+    font-weight: 300;
+  }
+
+  .hero-stats {
+    display: flex;
+    gap: 3rem;
+    padding: 2.5rem 4rem;
+    border-top: 1px solid var(--border);
+    position: relative;
+    z-index: 10;
+  }
+
+  .stat-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.5rem;
+    color: var(--amber);
+    letter-spacing: 0.05em;
+  }
+
+  .stat-label {
+    font-size: 0.75rem;
+    color: var(--muted);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-top: 0.1rem;
+  }
+
+  /* ---- SERVICES SECTION ---- */
+  .services-section {
+    padding: 6rem 4rem;
+    position: relative;
+  }
+
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 4rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 2rem;
+  }
+
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    letter-spacing: 0.05em;
+    color: var(--text);
+  }
+
+  .section-count {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.75rem;
+    color: var(--muted);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+
+  /* ---- SERVICE CARDS GRID ---- */
+  .services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5px;
+    background: var(--border);
+    border: 1.5px solid var(--border);
+  }
+
+  .service-card {
+    background: var(--surface);
+    padding: 2.5rem 2rem;
+    cursor: pointer;
+    transition: background 0.25s, transform 0.2s;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+    min-height: 240px;
+  }
+
+  .service-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0%;
+    height: 2px;
+    background: var(--green);
+    transition: width 0.35s ease;
+  }
+
+  .service-card:hover {
+    background: var(--card-hover);
+    transform: translateY(-2px);
+  }
+
+  .service-card:hover::after { width: 100%; }
+
+  .service-card.featured {
+    background: var(--surface2);
+    grid-column: span 2;
+  }
+
+  .service-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 5rem;
+    line-height: 1;
+    color: var(--border);
+    position: absolute;
+    right: 1.5rem;
+    top: 1rem;
+    transition: color 0.25s;
+    letter-spacing: 0.05em;
+  }
+
+  .service-card:hover .service-num { color: rgba(76,175,80,0.15); }
+
+  .service-icon {
+    font-size: 2rem;
+    line-height: 1;
+  }
+
+  .service-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: 0.02em;
+    line-height: 1.3;
+    z-index: 1;
+  }
+
+  .service-desc {
+    font-size: 0.85rem;
+    color: var(--muted);
+    line-height: 1.6;
+    z-index: 1;
+    flex: 1;
+  }
+
+  .service-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-family: 'Syne', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--green);
+    z-index: 1;
+  }
+
+  .service-tag::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+  }
+
+  .book-arrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: 'Syne', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text);
+    margin-top: auto;
+    opacity: 0;
+    transition: opacity 0.2s, transform 0.2s;
+    transform: translateX(-8px);
+  }
+
+  .service-card:hover .book-arrow {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  /* ---- MODAL ---- */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(8px);
+    z-index: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+
+  .modal-overlay.open {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    max-width: 580px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    transform: translateY(20px);
+    transition: transform 0.3s;
+    clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 0 100%);
+  }
+
+  .modal-overlay.open .modal { transform: translateY(0); }
+
+  .modal-header {
+    padding: 2.5rem 2.5rem 0;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 1.5rem;
+    margin-bottom: 2rem;
+    position: relative;
+  }
+
+  .modal-service-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2rem;
+    letter-spacing: 0.05em;
+    color: var(--text);
+    margin-top: 0.5rem;
+  }
+
+  .modal-close {
+    position: absolute;
+    top: 2rem;
+    right: 2rem;
+    width: 36px;
+    height: 36px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+  }
+
+  .modal-close:hover { background: var(--green); color: var(--bg); }
+
+  .modal-body { padding: 0 2.5rem 2.5rem; }
+
+  /* ---- FORM ---- */
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+  .form-group.full { grid-column: span 2; }
+
+  label {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  input, select, textarea {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 0.8rem 1rem;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 300;
+    outline: none;
+    transition: border-color 0.2s;
+    width: 100%;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--green);
+  }
+
+  select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%234caf50' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    padding-right: 2.5rem;
+    cursor: pointer;
+  }
+
+  select option { background: var(--surface); }
+
+  textarea { resize: vertical; min-height: 100px; }
+
+  .submit-btn {
+    width: 100%;
+    margin-top: 1.5rem;
+    background: var(--green);
+    color: var(--bg);
+    border: none;
+    padding: 1.1rem;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s;
+    clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%);
+  }
+
+  .submit-btn:hover { background: var(--green-bright); transform: translateY(-1px); }
+
+  /* ---- SUCCESS STATE ---- */
+  .success-msg {
+    text-align: center;
+    padding: 3rem 2rem;
+    display: none;
+  }
+
+  .success-msg.show { display: block; }
+
+  .success-icon {
+    font-size: 3rem;
+    margin-bottom: 1.5rem;
+    display: block;
+  }
+
+  .success-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2rem;
+    letter-spacing: 0.05em;
+    color: var(--green);
+    margin-bottom: 0.8rem;
+  }
+
+  .success-text {
+    color: var(--muted);
+    font-size: 0.95rem;
+    line-height: 1.6;
+  }
+
+  /* ---- HOW IT WORKS ---- */
+  .how-section {
+    padding: 5rem 4rem;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .steps-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2rem;
+    margin-top: 3rem;
+  }
+
+  .step {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    position: relative;
+  }
+
+  .step:not(:last-child)::after {
+    content: '→';
+    position: absolute;
+    right: -1rem;
+    top: 0.5rem;
+    color: var(--border);
+    font-size: 1.2rem;
+  }
+
+  .step-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 3.5rem;
+    color: var(--green);
+    line-height: 1;
+    letter-spacing: 0.05em;
+  }
+
+  .step-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--text);
+  }
+
+  .step-text {
+    font-size: 0.85rem;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  /* ---- FOOTER ---- */
+  footer {
+    padding: 3rem 4rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+  }
+
+  .footer-info {
+    font-size: 0.82rem;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+
+  .footer-contact a {
+    color: var(--green);
+    text-decoration: none;
+    font-family: 'Syne', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+  }
+
+  .footer-contact a:hover { text-decoration: underline; }
+
+  /* ---- SCROLL FADE IN ---- */
+  .fade-in {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+
+  .fade-in.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ---- MOBILE ---- */
+  @media (max-width: 768px) {
+    nav { padding: 1.5rem 1.5rem; }
+    .hero-content { padding: 3rem 1.5rem 1.5rem; }
+    .hero-stats { padding: 2rem 1.5rem; gap: 2rem; flex-wrap: wrap; }
+    .services-section { padding: 4rem 1.5rem; }
+    .how-section { padding: 4rem 1.5rem; }
+    footer { padding: 2.5rem 1.5rem; flex-direction: column; align-items: flex-start; }
+    .steps-row { grid-template-columns: 1fr 1fr; }
+    .service-card.featured { grid-column: span 1; }
+    .form-grid { grid-template-columns: 1fr; }
+    .form-group.full { grid-column: span 1; }
+    .modal { clip-path: none; }
+    .section-header { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">
+    <div class="logo-dot"></div>
+    PROSERVICE
+  </div>
+  <button class="nav-cta" onclick="scrollToServices()">Boka Nu</button>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-lines"></div>
+
+  <div class="hero-content">
+    <div class="hero-eyebrow">Professionella Tjänster · Sverige</div>
+    <h1>VI <span class="accent">FIXAR</span><br>DET.</h1>
+    <p class="hero-sub">
+      Från trädfällning till eventproduktion – vi erbjuder pålitliga, professionella tjänster för privatpersoner och företag. Boka enkelt online.
+    </p>
+  </div>
+
+  <div class="hero-stats">
+    <div>
+      <div class="stat-num">7</div>
+      <div class="stat-label">Tjänster</div>
+    </div>
+    <div>
+      <div class="stat-num">24H</div>
+      <div class="stat-label">Svarstid</div>
+    </div>
+    <div>
+      <div class="stat-num">100%</div>
+      <div class="stat-label">Nöjda kunder</div>
+    </div>
+    <div>
+      <div class="stat-num">5★</div>
+      <div class="stat-label">Betyg</div>
+    </div>
+  </div>
+</section>
+
+<!-- SERVICES -->
+<section class="services-section" id="services">
+  <div class="section-header fade-in">
+    <h2 class="section-title">Våra Tjänster</h2>
+    <span class="section-count">07 Tjänster tillgängliga</span>
+  </div>
+
+  <div class="services-grid">
+
+    <div class="service-card fade-in" onclick="openModal('Röjsåg & Trädfällning', '🪓', 'Professionell röjning av sly, buskar och trädfällning. Vi sköter allt från planering till bortforsling av material.')">
+      <span class="service-num">01</span>
+      <div class="service-icon">🪓</div>
+      <div class="service-name">Röjsåg &<br>Trädfällning</div>
+      <div class="service-desc">Professionell röjning av sly och buskar. Trädfällning med säkert utförande och bortforsling av material.</div>
+      <span class="service-tag">Utemiljö</span>
+      <span class="book-arrow">Boka →</span>
+    </div>
+
+    <div class="service-card fade-in" onclick="openModal('Ventilation Installation', '🌀', 'Certifierad installation av ventilationssystem för hem och företag. Vi säkerställer god luftkvalitet och energieffektivitet.')">
+      <span class="service-num">02</span>
+      <div class="service-icon">🌀</div>
+      <div class="service-name">Ventilation<br>Installation</div>
+      <div class="service-desc">Certifierad installation av ventilationssystem. Vi säkerställer god luftkvalitet och rätt energieffektivitet.</div>
+      <span class="service-tag">Teknik</span>
+      <span class="book-arrow">Boka →</span>
+    </div>
+
+    <div class="service-card fade-in" onclick="openModal('Fastighetskötsel', '🏢', 'Löpande skötsel av fastigheter, gemensamma utrymmen, trappstädning, felanmälan och tillsyn året runt.')">
+      <span class="service-num">03</span>
+      <div class="service-icon">🏢</div>
+      <div class="service-name">Fastighets-<br>skötsel</div>
+      <div class="service-desc">Löpande skötsel av fastigheter och gemensamma utrymmen. Tillsyn, felanmälan och underhåll året om.</div>
+      <span class="service-tag">Förvaltning</span>
+      <span class="book-arrow">Boka →</span>
+    </div>
+
+    <div class="service-card fade-in" onclick="openModal('Event Produktion', '🎪', 'Planering och produktion av events – allt från mindre företagsevent till större utomhusarrangemang.')">
+      <span class="service-num">04</span>
+      <div class="service-icon">🎪</div>
+      <div class="service-name">Event<br>Produktion</div>
+      <div class="service-desc">Planering och produktion av events, från företagsfester till utomhusarrangemang. Vi hanterar logistiken.</div>
+      <span class="service-tag">Event</span>
+      <span class="book-arrow">Boka →</span>
+    </div>
+
+    <div class="service-card fade-in" onclick="openModal('Snöskottning', '❄️', 'Snabbinsats vid snöfall – snöröjning av uppfarter, gårdar, tak och gångbanor. Avtal eller engångsbokning.')">
+      <span class="service-num">05</span>
+      <div class="service-icon">❄️</div>
+      <div class="service-name">Snöskottning</div>
+      <div class="service-desc">Snabbinsats vid snöfall. Snöröjning av uppfarter, gårdar och gångbanor. Avtal eller engångsbokning.</div>
+      <span class="service-tag">Vinter</span>
+      <span class="book-arrow">Boka →</span>
+    </div>
+
+    <div class="service-card fade-in" onclick="openModal('Hjullastare Förare', '🚜', 'Erfaren förare med hjullastare för markarbeten, schaktning, plogning, materialhantering och mer.')">
+      <span class="service-num">06</span>
+      <div class="service-icon">🚜</div>
+      <div class="service-name">Hjullastare<br>Förare</div>
+      <div class="service-desc">Erfaren förare med hjullastare för markarbeten, schaktning, plogning och materialhantering.</div>
+      <span class="service-tag">Maskin</span>
+      <span class="book-arrow">Boka →</span>
+    </div>
+
+    <div class="service-card featured fade-in" onclick="openModal('Maskin Hyra', '⚙️', 'Hyr professionella maskiner för ditt projekt. Vi erbjuder välskötta maskiner med eller utan förare.')">
+      <span class="service-num">07</span>
+      <div class="service-icon">⚙️</div>
+      <div class="service-name">Maskin Hyra</div>
+      <div class="service-desc">Hyr professionella maskiner för ditt projekt. Välskötta maskiner med eller utan förare. Kontakta oss för priser och tillgänglighet.</div>
+      <span class="service-tag">Uthyrning</span>
+      <span class="book-arrow">Boka →</span>
+    </div>
+
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how-section">
+  <div class="section-header fade-in">
+    <h2 class="section-title">Så Funkar Det</h2>
+  </div>
+  <div class="steps-row">
+    <div class="step fade-in">
+      <div class="step-num">01</div>
+      <div class="step-title">Välj Tjänst</div>
+      <div class="step-text">Klicka på den tjänst du behöver hjälp med bland våra sju alternativ.</div>
+    </div>
+    <div class="step fade-in" style="transition-delay: 0.1s">
+      <div class="step-num">02</div>
+      <div class="step-title">Fyll i Formulär</div>
+      <div class="step-text">Ange dina uppgifter, önskat datum och beskriv uppdraget kort.</div>
+    </div>
+    <div class="step fade-in" style="transition-delay: 0.2s">
+      <div class="step-num">03</div>
+      <div class="step-title">Vi Bekräftar</div>
+      <div class="step-text">Inom 24 timmar återkommer vi med bekräftelse och eventuellt en offert.</div>
+    </div>
+    <div class="step fade-in" style="transition-delay: 0.3s">
+      <div class="step-num">04</div>
+      <div class="step-title">Jobbet Görs</div>
+      <div class="step-text">Vår personal utför uppdraget professionellt och i tid.</div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-info">
+    © 2024 ProService AB · Org.nr: 199803044776<br>
+    Verksamma i hela Sverige
+  </div>
+  <div class="footer-contact">
+    <a href="mailto:ivarsson.timmy@gmail.com">ivarsson.timmy@gmail.com</a><br>
+    <a href="tel:+46723300603">072 330 06 03</a>
+  </div>
+</footer>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="handleOverlayClick(event)">
+  <div class="modal">
+    <div id="modalFormContent">
+      <div class="modal-header">
+        <div class="service-tag" id="modalTag">Tjänst</div>
+        <div class="modal-service-name" id="modalTitle">–</div>
+        <button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:0.88rem; color:var(--muted); margin-bottom:1.5rem; line-height:1.6;" id="modalDesc"></p>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Förnamn *</label>
+            <input type="text" id="fname" placeholder="Erik" required>
+          </div>
+          <div class="form-group">
+            <label>Efternamn *</label>
+            <input type="text" id="lname" placeholder="Johansson" required>
+          </div>
+          <div class="form-group">
+            <label>E-post *</label>
+            <input type="email" id="email" placeholder="erik@example.com" required>
+          </div>
+          <div class="form-group">
+            <label>Telefon</label>
+            <input type="tel" id="phone" placeholder="+46 70 000 00 00">
+          </div>
+          <div class="form-group">
+            <label>Önskat datum</label>
+            <input type="date" id="dateInput">
+          </div>
+          <div class="form-group">
+            <label>Prioritet</label>
+            <select id="priority">
+              <option value="normal">Normal</option>
+              <option value="brakande">Brådskande</option>
+              <option value="planerat">Planerat</option>
+            </select>
+          </div>
+          <div class="form-group full">
+            <label>Beskriv uppdraget</label>
+            <textarea id="description" placeholder="Berätta mer om vad du behöver hjälp med…"></textarea>
+          </div>
+          <div class="form-group full">
+            <label>Plats / Adress</label>
+            <input type="text" id="location" placeholder="Gatuadress, stad">
+          </div>
+        </div>
+        <button class="submit-btn" id="submitBtn" onclick="submitBooking()">Skicka Bokningsförfrågan →</button>
+      </div>
+    </div>
+
+    <div class="success-msg" id="successMsg">
+      <span class="success-icon">✅</span>
+      <div class="success-title">Tack för din förfrågan!</div>
+      <p class="success-text">Vi har tagit emot din bokning och återkommer inom 24 timmar.<br><br>Kontrollera din e-post för bekräftelse.</p>
+      <button class="submit-btn" style="margin-top:2rem; max-width:200px; margin-left:auto; margin-right:auto; display:block;" onclick="closeModal()">Stäng</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ---- SCROLL FADE IN ----
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach((e, i) => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        observer.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+  // ---- MODAL ----
+  let currentService = '';
+
+  function openModal(name, icon, desc) {
+    currentService = name;
+    document.getElementById('modalTitle').textContent = name;
+    document.getElementById('modalTag').textContent = icon + ' ' + name;
+    document.getElementById('modalDesc').textContent = desc;
+    document.getElementById('modalFormContent').style.display = 'block';
+    document.getElementById('successMsg').classList.remove('show');
+    document.getElementById('modalOverlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+
+    // Set min date to today
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('dateInput').min = today;
+  }
+
+  function closeModal() {
+    document.getElementById('modalOverlay').classList.remove('open');
+    document.body.style.overflow = '';
+    // Reset form
+    setTimeout(() => {
+      ['fname','lname','email','phone','dateInput','description','location'].forEach(id => {
+        document.getElementById(id).value = '';
+      });
+      document.getElementById('priority').value = 'normal';
+    }, 300);
+  }
+
+  function handleOverlayClick(e) {
+    if (e.target === document.getElementById('modalOverlay')) closeModal();
+  }
+
+  async function submitBooking() {
+    const fname = document.getElementById('fname').value.trim();
+    const lname = document.getElementById('lname').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+    const date = document.getElementById('dateInput').value;
+    const priority = document.getElementById('priority').value;
+    const description = document.getElementById('description').value.trim();
+    const location = document.getElementById('location').value.trim();
+
+    if (!fname || !lname || !email) {
+      alert('Vänligen fyll i alla obligatoriska fält (markerade med *).');
+      return;
+    }
+    if (!/^\S+@\S+\.\S+$/.test(email)) {
+      alert('Vänligen ange en giltig e-postadress.');
+      return;
+    }
+
+    const btn = document.getElementById('submitBtn');
+    btn.textContent = 'Skickar…';
+    btn.disabled = true;
+    btn.style.opacity = '0.7';
+
+    const priorityLabel = { normal: 'Normal', brakande: 'Brådskande', planerat: 'Planerat' }[priority] || priority;
+
+    const message =
+      '🛠️ TJÄNST: ' + currentService + '\n\n' +
+      '👤 KUNDINFORMATION\n' +
+      'Namn: ' + fname + ' ' + lname + '\n' +
+      'E-post: ' + email + '\n' +
+      'Telefon: ' + (phone || '–') + '\n\n' +
+      '📋 UPPDRAGSDETALJER\n' +
+      'Önskat datum: ' + (date || '–') + '\n' +
+      'Prioritet: ' + priorityLabel + '\n' +
+      'Plats: ' + (location || '–') + '\n\n' +
+      '📝 Beskrivning:\n' + (description || '–');
+
+    try {
+      const res = await fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({
+          access_key: '42dfb744-7207-43cb-acc8-531dbae98f20',
+          subject: 'Bokningsförfrågan: ' + currentService + ' – ' + fname + ' ' + lname,
+          from_name: fname + ' ' + lname,
+          email: email,
+          message: message,
+          botcheck: ''
+        })
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        document.getElementById('modalFormContent').style.display = 'none';
+        document.getElementById('successMsg').classList.add('show');
+      } else {
+        throw new Error(data.message || 'Fel vid skickning');
+      }
+    } catch (err) {
+      alert('Något gick fel. Försök igen eller ring oss på 072 330 06 03.');
+      btn.textContent = 'Skicka Bokningsförfrågan →';
+      btn.disabled = false;
+      btn.style.opacity = '1';
+    }
+  }
+
+  function scrollToServices() {
+    document.getElementById('services').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  // Keyboard close
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeModal();
+  });
+</script>
+</body>
+</html>
